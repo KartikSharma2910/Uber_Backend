@@ -1,4 +1,5 @@
 const userModel = require("../models/user.model");
+const blackListTokenModel = require("../models/blackListToken.model");
 const { validationResult } = require("express-validator");
 const userService = require("../services/user.service");
 
@@ -71,6 +72,7 @@ const loginUser = async (req, res) => {
     }
 
     const token = user.generateAuthToken();
+    res.cookie("token", token);
 
     res.json({
       message: "Login successful",
@@ -89,4 +91,35 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser };
+const getUserProfile = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      socketId: user.socketId,
+    });
+  } catch (error) {
+    console.error("Profile error:", error);
+    return res.status(500).json({
+      message: error.message || "Server error",
+    });
+  }
+};
+
+const logoutUser = async (req, res) => {
+  res.clearCookie("token");
+  const token =
+    req.cookies.token || req.header("Authorization")?.replace("Bearer ", "");
+
+  await blackListTokenModel.create({ token });
+  res.json({ message: "Logout successful" });
+};
+
+module.exports = { registerUser, loginUser, getUserProfile, logoutUser };
