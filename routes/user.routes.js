@@ -7,7 +7,7 @@ const {
   logoutUser,
   getUserProfile,
 } = require("../controllers/user.controller");
-const authMiddleware = require("../middlewares/auth.middleware");
+const { authMiddleware } = require("../middlewares/auth.middleware");
 
 router.post(
   "/register",
